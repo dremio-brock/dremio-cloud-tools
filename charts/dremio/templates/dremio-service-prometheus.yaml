@@ -1,0 +1,15 @@
+{{ if not .Values.DremioAdmin }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: dremio-prometheus
+  labels:
+    app: dremio-prometheus
+spec:
+  ports:
+    - port: 12543
+      name: prometheus
+  clusterIP: None
+  selector:
+    role: dremio-cluster-pod
+{{ end }}

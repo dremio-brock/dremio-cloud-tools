@@ -1,8 +1,7 @@
-{{ if not .Values.DremioAdmin }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: dremio-executor
+  name: dremio-executor-{{.Values.executor.engineName}}
 spec:
   serviceName: "dremio-cluster-pod"
   replicas: {{.Values.executor.minCount}}
@@ -10,11 +9,11 @@ spec:
   revisionHistoryLimit: 1
   selector:
     matchLabels:
-      app: dremio-executor
+      app: dremio-executor-{{.Values.executor.engineName}}
   template:
     metadata:
       labels:
-        app: dremio-executor
+        app: dremio-executor-{{.Values.executor.engineName}}
         role: dremio-cluster-pod
       annotations:
         dremio-configmap/checksum: {{ (.Files.Glob "config/*").AsConfig | sha256sum }}
@@ -27,7 +26,7 @@ spec:
         {{- end }}
       {{- end }}
       containers:
-      - name: dremio-executor
+      - name: dremio-executor-{{.Values.executor.engineName}}
         image: {{.Values.image}}:{{.Values.imageTag}}
         imagePullPolicy: IfNotPresent
         lifecycle:
@@ -39,7 +38,7 @@ spec:
             memory: {{.Values.executor.memory}}M
             cpu: {{.Values.executor.cpu}}
         volumeMounts:
-        - name: dremio-executor-volume
+        - name: dremio-executor-{{.Values.executor.engineName}}-volume
           mountPath: /opt/dremio/data
         - name: dremio-config
           mountPath: /opt/dremio/conf
@@ -75,7 +74,7 @@ spec:
         securityContext:
           runAsUser: 0
         volumeMounts:
-        - name: dremio-executor-volume
+        - name: dremio-executor-{{.Values.executor.engineName}}-volume
           mountPath: /opt/dremio/data
         command: ["chown"]
         args:
@@ -91,7 +90,7 @@ spec:
       {{- end}}
   volumeClaimTemplates:
   - metadata:
-      name: dremio-executor-volume
+      name: dremio-executor-{{.Values.executor.engineName}}-volume
     spec:
       accessModes: [ "ReadWriteOnce" ]
       {{- if .Values.storageClass }}
@@ -100,4 +99,3 @@ spec:
       resources:
         requests:
           storage: {{.Values.executor.volumeSize}}
-{{ end }}
