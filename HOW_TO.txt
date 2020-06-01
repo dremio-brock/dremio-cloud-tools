@@ -1,6 +1,8 @@
 docker login
-docker build utils/DockerFile -t <USERNAME>.dremio-prometheus:v1.0
-docker push <USERNAME>.dremio-prometheus:v1.0
+docker build images/dremio-oss -t <USERNAME>/dremio-prometheus:v1.0
+docker push <USERNAME>/dremio-prometheus:v1.0
+docker build images/fluentd -t <USERNAME>/fluentd-azure:v1.0
+docker push <USERNAME>/fluentd-azure:v1.0
 
 kubectl apply -f helm-rbac.yaml
 helm init --history-max 200 --service-account tiller --node-selectors "beta.kubernetes.io/os=linux"

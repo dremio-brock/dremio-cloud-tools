@@ -43,6 +43,8 @@ spec:
             memory: {{.Values.coordinator.memory}}M
             cpu: {{.Values.coordinator.cpu}}
         volumeMounts:
+        - name: dremio-master-log
+          mountPath: /opt/dremio/log
         - name: dremio-master-volume
           mountPath: /opt/dremio/data
         - name: dremio-config
@@ -52,6 +54,10 @@ spec:
           mountPath: /opt/dremio/tls
         {{- end }}
         env:
+        - name: DREMIO_LOG_TO_CONSOLE
+          value: "0"
+        - name: DREMIO_LOG_DIR
+          value: /opt/dremio/log
         - name: DREMIO_MAX_HEAP_MEMORY_SIZE_MB
           value: "{{ template "HeapMemory" .Values.coordinator.memory }}"
         - name: DREMIO_MAX_DIRECT_MEMORY_SIZE_MB
@@ -85,6 +91,70 @@ spec:
             port: 9047
           initialDelaySeconds: 5
           periodSeconds: 5
+      - name: json-logs
+        image: busybox
+        args: ["sh", "-c", "sh /home/user/log-to-console.sh /opt/dremio/log/json/server.json"]
+        volumeMounts:
+          - name: log-script
+            mountPath: /home/user
+          - name: dremio-master-log
+            mountPath: /opt/dremio/log
+      - name: query-logs
+        image: busybox
+        args: ["sh", "-c", "sh /home/user/log-to-console.sh /opt/dremio/log/queries.json"]
+        volumeMounts:
+          - name: log-script
+            mountPath: /home/user
+          - name: dremio-master-log
+            mountPath: /opt/dremio/log
+      - name: metadata-logs
+        image: busybox
+        args: ["sh", "-c", "sh /home/user/log-to-console.sh /opt/dremio/log/metadata_refresh.log"]
+        volumeMounts:
+          - name: log-script
+            mountPath: /home/user
+          - name: dremio-master-log
+            mountPath: /opt/dremio/log
+      - name: access-logs
+        image: busybox
+        args: ["sh", "-c", "sh /home/user/log-to-console.sh /opt/dremio/log/access.log"]
+        volumeMounts:
+          - name: log-script
+            mountPath: /home/user
+          - name: dremio-master-log
+            mountPath: /opt/dremio/log
+      - name: gc-logs
+        image: busybox
+        args: ["sh", "-c", "sh /home/user/log-to-console.sh /opt/dremio/log/server.gc"]
+        volumeMounts:
+          - name: log-script
+            mountPath: /home/user
+          - name: dremio-master-log
+            mountPath: /opt/dremio/log
+      - name: serverout-logs
+        image: busybox
+        args: ["sh", "-c", "sh /home/user/log-to-console.sh /opt/dremio/log/server.out"]
+        volumeMounts:
+          - name: log-script
+            mountPath: /home/user
+          - name: dremio-master-log
+            mountPath: /opt/dremio/log
+      - name: serverlog-logs
+        image: busybox
+        args: ["sh", "-c", "sh /home/user/log-to-console.sh /opt/dremio/log/server.log"]
+        volumeMounts:
+          - name: log-script
+            mountPath: /home/user
+          - name: dremio-master-log
+            mountPath: /opt/dremio/log
+      - name: hivedeprecation-logs
+        image: busybox
+        args: ["sh", "-c", "sh /home/user/log-to-console.sh /opt/dremio/log/hive.deprecated.function.warning.log"]
+        volumeMounts:
+          - name: log-script
+            mountPath: /home/user
+          - name: dremio-master-log
+            mountPath: /opt/dremio/log
       initContainers:
       - name: start-only-one-master
         image: busybox
@@ -159,6 +229,11 @@ spec:
         - "pass:"
       {{- end }}
       volumes:
+      - name: dremio-master-log
+        emptyDir: {}
+      - name: log-script
+        configMap:
+          name: log-script
       - name: dremio-config
         configMap:
           name: dremio-config
