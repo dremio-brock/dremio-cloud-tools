@@ -8,7 +8,7 @@ kubectl apply -f helm-rbac.yaml
 helm init --history-max 200 --service-account tiller --node-selectors "beta.kubernetes.io/os=linux"
 kubectl create namespace dremio
 kubectl create namespace monitoring
-helm install --name prometheus --namespace monitoring stable/prometheus-operator
+helm install --name prometheus --namespace monitoring stable/prometheus-operator --values prometheus/values.yaml
 helm install --name prometheus-adapter --namespace monitoring prometheus-adapter
 kubectl apply -f dremio-service-monitor.yaml -n monitoring
 kubectl apply -f dremio-alerts.yaml -n monitoring

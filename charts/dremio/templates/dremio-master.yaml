@@ -18,6 +18,16 @@ spec:
         dremio-configmap/checksum: {{ (.Files.Glob "config/*").AsConfig | sha256sum }}
     spec:
       affinity:
+        {{- if .Values.coordinator.specifyAgentPool }}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: In
+                values:
+                  - {{.Values.coordinator.agentpool.name}}
+        {{- else }}
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
@@ -27,6 +37,7 @@ spec:
                     values:
                     - dremio-master
               topologyKey: "kubernetes.io/hostname"
+        {{- end }}
       terminationGracePeriodSeconds: 5
       {{- if .Values.nodeSelector }}
       nodeSelector:
