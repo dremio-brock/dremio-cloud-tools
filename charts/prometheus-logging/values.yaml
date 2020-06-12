@@ -1,0 +1,16 @@
+# The image used to build the Dremio cluster. It is recommended to update the
+# version tag to the version that you are using. This will ensure that all
+# the pods are using the same version of the software.
+image: jonnydixon/prom-py
+imageTag: "1.0"
+
+# Check out Dremio documentation for memory and cpu requirements for
+# the coordinators and the executors.
+# The value of memory should be in MB. CPU is in no of cores.
+azure:
+  account:
+  key:
+prometheus:
+  promUILogin:
+  container:
+  url: 

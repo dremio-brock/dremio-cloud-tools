@@ -1,0 +1,6 @@
+prometheus_api_client
+azure==4.0.0
+apscheduler
+pandas
+pyarrow
+configparser

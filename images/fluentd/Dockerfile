@@ -27,8 +27,7 @@ ENV BITNAMI_APP_NAME="fluentd" \
     PATH="/opt/bitnami/ruby/bin:/opt/bitnami/common/bin:/opt/bitnami/fluentd/bin:$PATH"
 
 RUN gem install fluent-plugin-azure-storage-append-blob \
-  && gem install fluent-plugin-rewrite-tag-filter \
-  && gem install fluent-plugin-multi-format-parser
+  && gem install fluent-plugin-rewrite-tag-filter
 RUN chown -R 1001 /var/log
 
 EXPOSE 5140 24224

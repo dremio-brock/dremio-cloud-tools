@@ -1,0 +1,325 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "fluentd.fullname" . }}-forwarder-cm
+  labels: {{- include "fluentd.labels" . | nindent 4 }}
+    app.kubernetes.io/component: forwarder
+data:
+  fluentd.conf: |
+        <source>
+          @type tail
+          @id query-logs
+          @label @containers
+          path /var/log/containers/dremio*dremio*query-logs*.log
+          pos_file /var/log/fluentd/containers-qr.log.pos
+          tag *
+          read_from_head true
+          <parse>
+            @type json
+            time_format %Y-%m-%dT%H:%M:%S.%NZ
+          </parse>
+        </source>
+
+        <source>
+          @type tail
+          @id access-logs
+          @label @containers
+          path /var/log/containers/dremio*dremio*access-logs*.log
+          pos_file /var/log/fluentd/containers-access.log.pos
+          tag *
+          read_from_head true
+          <parse>
+            @type json
+            time_format %Y-%m-%dT%H:%M:%S.%NZ
+          </parse>
+        </source>
+
+        <source>
+          @type tail
+          @id json-logs
+          @label @containers
+          path /var/log/containers/dremio*dremio*json-logs*.log
+          pos_file /var/log/fluentd/containers-js.log.pos
+          tag *
+          read_from_head true
+          <parse>
+            @type json
+            time_format %Y-%m-%dT%H:%M:%S.%NZ
+          </parse>
+        </source>
+
+        <source>
+          @type tail
+          @id metadata-logs
+          @label @concat
+          path /var/log/containers/dremio*dremio*metadata-logs*.log
+          pos_file /var/log/fluentd/containers-mt.log.pos
+          tag *
+          read_from_head true
+          <parse>
+            @type json
+            time_format %Y-%m-%dT%H:%M:%S.%NZ
+          </parse>
+        </source>
+
+        <source>
+          @type tail
+          @id serverl-logs
+          @label @concat
+          path /var/log/containers/dremio*dremio*serverlog-logs*.log
+          pos_file /var/log/fluentd/containers-sl.log.pos
+          tag *
+          read_from_head true
+          <parse>
+            @type json
+            time_format %Y-%m-%dT%H:%M:%S.%NZ
+          </parse>
+        </source>
+
+        <source>
+          @type tail
+          @id servero-logs
+          @label @concat
+          path /var/log/containers/dremio*dremio*serverout*.log
+          pos_file /var/log/fluentd/containers-so.log.pos
+          tag *
+          read_from_head true
+          <parse>
+            @type json
+            time_format %Y-%m-%dT%H:%M:%S.%NZ
+          </parse>
+        </source>
+
+        <source>
+          @type tail
+          @id hive-logs
+          @label @containers
+          path /var/log/containers/dremio*dremio*hivedeprecation-logs*.log
+          pos_file /var/log/fluentd/containers-hd.log.pos
+          tag *
+          read_from_head true
+          <parse>
+            @type json
+            time_format %Y-%m-%dT%H:%M:%S.%NZ
+          </parse>
+        </source>
+
+        <source>
+          @type tail
+          @id executor-logs
+          @label @concat
+          path /var/log/containers/*dremio-executor*dremio-executor*.log
+          pos_file /var/log/fluentd/containers-exec.log.pos
+          tag *
+          read_from_head true
+          <parse>
+            @type json
+            time_format %Y-%m-%dT%H:%M:%S.%NZ
+          </parse>
+        </source>
+
+        <label @concat>
+          <filter>
+            @type concat
+            key log
+            multiline_start_regexp /^((\d{2,})|(\w{3}\s\w{3}\s\d{1,2}[0-9:]{8}))/
+          </filter>
+
+          <match **>
+            @type relabel
+            @label @containers
+          </match>
+        </label>
+
+        <label @containers>
+          <filter **query-logs**>
+            @type parser
+            key_name log
+            reserve_data true
+            <parse>
+              @type json
+            </parse>
+          </filter>
+
+          <filter **json-logs**>
+            @type parser
+            key_name log
+            reserve_data true
+            <parse>
+              @type json
+            </parse>
+          </filter>
+
+          <filter **access-logs**>
+            @type parser
+            key_name log
+            <parse>
+              @type regexp
+              expression /^(?<ip>[^ ]*) - - \[(?<time>[^\]]*)\] "(?<method>\S+)(?: +(?<path>[^ ]*) +\S*)?" (?<code>[^ ]*) (?<size>[^ ]*)(?: "(?<referer>[^\"]*)" "(?<agent>[^\"]*)")?$/
+              time_format %d/%b/%Y:%H:%M:%S %z
+            </parse>
+            reserve_data true
+          </filter>
+
+          <filter **hive-logs**>
+            @type parser
+            key_name log
+            <parse>
+              @type regexp
+              expression /^(?<time>.*)\s\[(?<queryId>.+)\:(?<section>.+)\]\s(?<level>\S+)\s(?<message>.+)$/
+              time_format %Y-%m-%d %H:%M:%S,%N
+            </parse>
+            reserve_data true
+          </filter>
+
+          <filter **metadata-logs**>
+            @type parser
+            key_name log
+            <parse>
+              @type regexp
+              expression /^(?<time>.{23})\s+\[(?<scheduler>.+)\]\s+(?<level>[A-Z]+)\s+(?<message>.+)/m
+              time_format %Y-%m-%d %H:%M:%S,%N
+            </parse>
+            reserve_data true
+          </filter>
+
+          <filter **serverl-logs**>
+            @type parser
+            key_name log
+            <parse>
+              @type regexp
+              expression /^(?<time>[0-9]{4}-[0-9]{2}-[0-9]{2}\s[0-9+:,]{12})\s+\[(?<method>.+?(?=\]))\]\s+(?<level>[A-Z]+)\s+(?<message>.+)/m
+              time_format %Y-%m-%d %H:%M:%S,%N
+            </parse>
+            reserve_data true
+          </filter>
+
+          <filter **servero-logs**>
+            @type parser
+            key_name log
+            <parse>
+              @type regexp
+              expression /^(?<time>[0-9:,]{12})\s\|-(?<level>[A-Z]+)\sin\s(?<event>.+)/m
+              time_format %Y-%m-%d %H:%M:%S,%N
+            </parse>
+            reserve_data true
+          </filter>
+
+          <filter **executor-logs**>
+            @type parser
+            key_name log
+            <parse>
+              @type regexp
+              expression /^(?<time>[0-9]{4}-[0-9]{2}-[0-9]{2}\s[0-9+:,]{12})\s+\[(?<method>.+?(?=\]))\]\s+(?<level>[A-Z]+)\s+(?<message>.+)/m
+              time_format %Y-%m-%d %H:%M:%S,%N
+            </parse>
+            reserve_data true
+          </filter>
+
+          <match **master**>
+            @type relabel
+            @label @master
+          </match>
+
+          <match **coordinator**>
+            @type relabel
+            @label @coordinator
+          </match>
+
+          <match **executor**>
+            @type relabel
+            @label @executor
+          </match>
+        </label>
+
+        <label @master>
+          <filter **>
+            @type record_transformer
+            <record>
+              tag ${tag}
+            </record>
+          </filter>
+
+          <match **>
+            @type rewrite_tag_filter
+            <rule>
+              key     tag
+              pattern /.+(dremio\-\D+\d+)_dremio_(.+?(?=\-\d)).+$/
+              tag     $2/$1
+            </rule>
+            @label @NORMAL
+          </match>
+        </label>
+
+        <label @coordinator>
+          <filter **>
+            @type record_transformer
+            <record>
+              tag ${tag}
+            </record>
+          </filter>
+
+          <match **>
+            @type rewrite_tag_filter
+            <rule>
+              key     tag
+              pattern /.+(dremio\-\D+\d+)_dremio_(.+?(?=\-\d)).+$/
+              tag     $2/$1
+            </rule>
+            @label @NORMAL
+          </match>
+        </label>
+
+        <label @executor>
+          <filter **>
+            @type record_transformer
+            <record>
+              tag ${tag}
+            </record>
+          </filter>
+
+          <match **>
+            @type rewrite_tag_filter
+            <rule>
+              key     tag
+              pattern /.+(dremio\-\D+\d+?(?=\_)).+$/
+              tag     serverout-logs/$1
+            </rule>
+            @label @NORMAL
+          </match>
+        </label>
+
+        <label @NORMAL>
+          <filter **>
+            @type record_transformer
+            remove_keys message,tag,stream
+          </filter>
+
+          <match **>
+            @type relabel
+            @label @OUTPUT
+          </match>
+        </label>
+
+        <label @OUTPUT>
+          <match **>
+            @type azure-storage-append-blob
+            azure_storage_account    {{ .Values.azure.blobContainer }}
+            azure_storage_access_key {{ .Values.azure.accessKey }}
+            azure_container          logs
+            auto_create_container    true
+            path dremio/${tag}
+            azure_object_key_format  %{path}/ts=%{time_slice}_%{index}.json
+            time_slice_format        %Y%m%d/%H%M
+            <format>
+              @type json
+            </format>
+            <buffer tag,time>
+              @type file
+              path /var/log/fluent/azurestorageappendblob
+              timekey {{ .Values.azure.bucketTime }} # 600 = 10 minutes
+              timekey_wait 60
+              timekey_use_utc true # use utc
+            </buffer>
+          </match>
+        </label>

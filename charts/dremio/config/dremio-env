@@ -100,5 +100,3 @@
 # Extra Java options - server only (dremio command)
 #
 #DREMIO_JAVA_SERVER_EXTRA_OPTS=
-
-DREMIO_STOP_TIMEOUT=86400

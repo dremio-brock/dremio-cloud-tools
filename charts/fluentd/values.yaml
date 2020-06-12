@@ -13,7 +13,7 @@ global:
 image:
   registry: docker.io
   repository: jonnydixon/fluentd-azure
-  tag: "1.3"
+  tag: "1.4"
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -469,3 +469,8 @@ tls:
   certificate: |-
   key: |-
   # existingSecret: name-of-existing-secret-to-certificates
+
+azure:
+  blobContainer: jdfluentdlogs
+  accessKey: m/62xkPs+LbBqVnCplMZMoLoAVLz8NAxezsimLl1LWlwQFsxWYKOk+CCt94r0QT7WCgt6LppSCY/SNQ8ddQ8KA==
+  bucketTime: 600 #seconds

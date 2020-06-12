@@ -81,6 +81,14 @@ spec:
             {{- if .Values.extraStartParams }}
             {{ .Values.extraStartParams }}
             {{- end }}
+        - name: DREMIO_JAVA_SERVER_EXTRA_OPTS
+          value: >-
+            -XX:+UseG1GC
+            -XX:G1HeapRegionSize=32M
+            -XX:MaxGCPauseMillis=500
+            -XX:InitiatingHeapOccupancyPercent=25
+        - name: DREMIO_STOP_TIMEOUT
+          value: "86400"
         command: ["/opt/dremio/bin/dremio"]
         args:
         - "start-fg"
@@ -129,14 +137,6 @@ spec:
       - name: access-logs
         image: busybox
         args: ["sh", "-c", "sh /home/user/log-to-console.sh /opt/dremio/log/access.log"]
-        volumeMounts:
-          - name: log-script
-            mountPath: /home/user
-          - name: dremio-master-log
-            mountPath: /opt/dremio/log
-      - name: gc-logs
-        image: busybox
-        args: ["sh", "-c", "sh /home/user/log-to-console.sh /opt/dremio/log/server.gc"]
         volumeMounts:
           - name: log-script
             mountPath: /home/user
