@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hive-client
+  labels:
+    app: hive-client
+spec:
+  type: LoadBalancer
+  ports:
+  - port: {{ .Values.hive.port | default 9083 }}
+    targetPort: 9083
+    protocol: TCP
+    name: hive-metastore
+  selector:
+    app: hive-deployment

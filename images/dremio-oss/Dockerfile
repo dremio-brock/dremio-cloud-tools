@@ -24,7 +24,12 @@ RUN \
   && mv target/dremio-telemetry-prometheus-*-shaded.jar /opt/dremio/jars \
   && rm -rf ~/.m2 && rm -rf /opt/dremio/apache-maven-3.6.3 \
   && rm -rf apache-maven-3.6.3-bin.zip \
-  && rm -rf dremio.tar.gz
+  && rm -rf dremio.tar.gz \
+  && mkdir -p /opt/dremio/plugins/connectors/hive2-ee.d \
+  && mkdir -p /opt/dremio/plugins/connectors/hive2-ee.d/conf \
+  && mkdir -p /opt/dremio/plugins/connectors/hive3-ee.d \
+  && mkdir -p /opt/dremio/plugins/connectors/hive3-ee.d/conf \
+  && chown -R dremio:dremio /opt/dremio/plugins/connectors
 
 USER dremio
 WORKDIR /opt/dremio

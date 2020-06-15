@@ -1,16 +1,26 @@
-kind: Pod
-apiVersion: v1
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: prometheus-exporter
 spec:
-  containers:
-    - name: prometheus-exporter
-      image: {{.Values.image}}:{{.Values.imageTag}}
-      imagePullPolicy: Always
-      volumeMounts:
+  selector:
+    matchLabels:
+      app: prometheus-exporter
+  replicas: 1 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: prometheus-exporter
+        role: prometheus-exporter-pod
+    spec:
+      containers:
+        - name: prometheus-exporter
+          image: {{.Values.image}}:{{.Values.imageTag}}
+          imagePullPolicy: Always
+          volumeMounts:
+          - name: config-vol
+            mountPath: /app/config
+      volumes:
       - name: config-vol
-        mountPath: /app/config
-  volumes:
-  - name: config-vol
-    configMap:
-      name: appconfig
+        configMap:
+          name: appconfig

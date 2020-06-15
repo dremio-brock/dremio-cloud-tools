@@ -16,6 +16,12 @@ spec:
         role: dremio-cluster-pod
       annotations:
         dremio-configmap/checksum: {{ (.Files.Glob "config/*").AsConfig | sha256sum }}
+        {{- if .Values.hive2 }}
+        hive2-configmap/checksum: {{ (.Files.Glob "hive-2-conf/*").AsConfig | sha256sum }}
+        {{- end }}
+        {{- if .Values.hive3 }}
+        hive3-configmap/checksum: {{ (.Files.Glob "hive-3-conf/*").AsConfig | sha256sum }}
+        {{- end }}
     spec:
       affinity:
         {{- if .Values.coordinator.specifyAgentPool }}
@@ -63,6 +69,14 @@ spec:
         {{- if or .Values.tls.ui.enabled .Values.tls.client.enabled }}
         - name: dremio-tls
           mountPath: /opt/dremio/tls
+        {{- end }}
+        {{- if .Values.hive2 }}
+        - name: dremio-hive2-config
+          mountPath: /opt/dremio/plugins/connectors/hive2.d
+        {{- end }}
+        {{- if .Values.hive3 }}
+        - name: dremio-hive3-config
+          mountPath: /opt/dremio/plugins/connectors/hive3.d
         {{- end }}
         env:
         - name: DREMIO_LOG_TO_CONSOLE
@@ -248,6 +262,16 @@ spec:
       - name: dremio-config
         configMap:
           name: dremio-config
+      {{- if .Values.hive2 }}
+      - name: dremio-hive2-config
+        configMap:
+          name: dremio-hive2-config
+      {{- end }}
+      {{- if .Values.hive3 }}
+      - name: dremio-hive3-config
+        configMap:
+          name: dremio-hive3-config
+      {{- end }}
       {{- if or .Values.tls.ui.enabled .Values.tls.client.enabled }}
       - name: dremio-tls
         emptyDir: {}

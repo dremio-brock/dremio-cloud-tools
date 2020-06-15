@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hive-deployment
+spec:
+  selector:
+    matchLabels:
+      app: hive-deployment
+  replicas: 1 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: hive-deployment
+        role: hive-metadata-pod
+      annotations:
+        hive-configmap/checksum: {{ (.Files.Glob "conf/*").AsConfig | sha256sum }}
+    spec:
+      containers:
+      - name: hive-deployment
+        image: {{.Values.image}}:{{.Values.imageTag}}
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9083
+        volumeMounts:
+        - name: hive-metastore-config
+          mountPath: /opt/apache-hive-3.1.0-bin/conf
+      volumes:
+      - name: hive-metastore-config
+        configMap:
+          name: hive-metastore-config
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecrets }}
+      {{- end}}
