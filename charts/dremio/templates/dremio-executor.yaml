@@ -51,11 +51,11 @@ spec:
           mountPath: /opt/dremio/conf
         {{- if .Values.hive2 }}
         - name: dremio-hive2-config
-          mountPath: /opt/dremio/plugins/connectors/hive2.d
+          mountPath: /opt/dremio/plugins/connectors/hive2-ee.d
         {{- end }}
         {{- if .Values.hive3 }}
         - name: dremio-hive3-config
-          mountPath: /opt/dremio/plugins/connectors/hive3.d
+          mountPath: /opt/dremio/plugins/connectors/hive3-ee.d
         {{- end }}
         env:
         - name: DREMIO_MAX_HEAP_MEMORY_SIZE_MB
@@ -66,6 +66,7 @@ spec:
           value: >-
             -Dzookeeper=zk-hs:2181
             -Dservices.coordinator.enabled=false
+            -Dservices.node-tag={{ .Values.executor.engineName | default "dremio" }}
             {{- if .Values.extraStartParams }}
             {{ .Values.extraStartParams }}
             {{- end }}

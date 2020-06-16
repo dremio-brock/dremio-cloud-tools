@@ -72,11 +72,11 @@ spec:
         {{- end }}
         {{- if .Values.hive2 }}
         - name: dremio-hive2-config
-          mountPath: /opt/dremio/plugins/connectors/hive2.d
+          mountPath: /opt/dremio/plugins/connectors/hive2-ee.d
         {{- end }}
         {{- if .Values.hive3 }}
         - name: dremio-hive3-config
-          mountPath: /opt/dremio/plugins/connectors/hive3.d
+          mountPath: /opt/dremio/plugins/connectors/hive3-ee.d
         {{- end }}
         env:
         - name: DREMIO_LOG_TO_CONSOLE

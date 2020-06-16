@@ -1,3 +1,4 @@
+{{ if not .Values.DremioAdmin }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -17,6 +18,12 @@ spec:
         role: dremio-cluster-pod
       annotations:
         dremio-configmap/checksum: {{ (.Files.Glob "config/*").AsConfig | sha256sum }}
+        {{- if .Values.hive2 }}
+        hive2-configmap/checksum: {{ (.Files.Glob "hive-2-conf/*").AsConfig | sha256sum }}
+        {{- end }}
+        {{- if .Values.hive3 }}
+        hive3-configmap/checksum: {{ (.Files.Glob "hive-3-conf/*").AsConfig | sha256sum }}
+        {{- end }}
     spec:
       terminationGracePeriodSeconds: 5
       {{- if .Values.nodeSelector }}
@@ -42,6 +49,14 @@ spec:
           mountPath: /opt/dremio/data
         - name: dremio-config
           mountPath: /opt/dremio/conf
+        {{- if .Values.hive2 }}
+        - name: dremio-hive2-config
+          mountPath: /opt/dremio/plugins/connectors/hive2-ee.d
+        {{- end }}
+        {{- if .Values.hive3 }}
+        - name: dremio-hive3-config
+          mountPath: /opt/dremio/plugins/connectors/hive3-ee.d
+        {{- end }}
         env:
         - name: DREMIO_MAX_HEAP_MEMORY_SIZE_MB
           value: "{{ template "HeapMemory" .Values.executor.memory }}"
@@ -51,9 +66,18 @@ spec:
           value: >-
             -Dzookeeper=zk-hs:2181
             -Dservices.coordinator.enabled=false
+            -Dservices.node-tag={{ .Values.executor.engineName | default "dremio" }}
             {{- if .Values.extraStartParams }}
             {{ .Values.extraStartParams }}
             {{- end }}
+        - name: DREMIO_JAVA_SERVER_EXTRA_OPTS
+          value: >-
+            -XX:+UseG1GC
+            -XX:G1HeapRegionSize=32M
+            -XX:MaxGCPauseMillis=500
+            -XX:InitiatingHeapOccupancyPercent=25
+        - name: DREMIO_STOP_TIMEOUT
+          value: "86400"
         command: ["/opt/dremio/bin/dremio"]
         args:
         - "start-fg"
@@ -84,6 +108,16 @@ spec:
       - name: dremio-config
         configMap:
           name: dremio-config
+      {{- if .Values.hive2 }}
+      - name: dremio-hive2-config
+        configMap:
+          name: dremio-hive2-config
+      {{- end }}
+      {{- if .Values.hive3 }}
+      - name: dremio-hive3-config
+        configMap:
+          name: dremio-hive3-config
+      {{- end }}
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
         - name: {{ .Values.imagePullSecrets }}
@@ -99,3 +133,4 @@ spec:
       resources:
         requests:
           storage: {{.Values.executor.volumeSize}}
+{{ end }}
