@@ -1,28 +1,35 @@
 # The image used to build the Dremio cluster. It is recommended to update the
 # version tag to the version that you are using. This will ensure that all
 # the pods are using the same version of the software.
-image: dremio/dremio-oss
-imageTag: latest
+image: jonnydixon/dremio-ee-prometheus
+imageTag: 4.5.0
 
 # Check out Dremio documentation for memory and cpu requirements for
 # the coordinators and the executors.
 # The value of memory should be in MB. CPU is in no of cores.
 coordinator:
-  memory: 122880
-  cpu: 15
+  memory: 11264
+  cpu: 2
   # This count is for slave coordinators only.
   # The chart will always create one master coordinator - you are
   # not required to have more than one master coordinator.
   count: 0
   web:
-    port: 9047
+    port: 443
   client:
     port: 31010
-  volumeSize: 100Gi
+  volumeSize: 50Gi
+  specifyAgentPool: true
+  agentpool:
+    name: jdmasterpod
 executor:
-  memory: 122880
-  cpu: 15
-  count: 3
+  memory: 11264
+  cpu: 3
+  minCount: 2
+  maxCount: 6
+  scaleUpTime: 10
+  scaleDownTime: 600
+  engineName: primary
   volumeSize: 100Gi
   cloudCache:
     # Requires Dremio version 4.0.0 or later
@@ -39,9 +46,9 @@ executor:
       # reservation.
       cache_pct: 100
 zookeeper:
-  memory: 1024
-  cpu: 0.5
-  count: 3
+  memory: 512
+  cpu: 0.3
+  count: 2
   volumeSize: 10Gi
 
 # To create a TLS secret, use the following command:
@@ -50,20 +57,23 @@ tls:
   ui:
     # To enable TLS for the web UI, set the enabled flag to true and provide
     # the appropriate Kubernetes TLS secret.
-    enabled: false
+    enabled: true
     secret: dremio-tls-secret-ui
   client:
     # To enable TLS for the client endpoints, set the enabled flag to
     # true and provide the appropriate Kubernetes TLS secret. Client
     # endpoint encryption is available only on Dremio Enterprise
     # Edition and should not be enabled otherwise.
-    enabled: false
-    secret: dremio-tls-secret-client
+    enabled: true
+    secret: dremio-tls-secret-ui
 
 # If your Kubernetes cluster does not support LoadBalancer,
 # comment out the line below for the helm chart to succeed or add
 # the correct serviceType for your cluster.
 serviceType: LoadBalancer
+
+hive2: false
+hive3: true
 
 # If the loadBalancer supports sessionAffinity and
 # you have one or more coordinators, enable it
@@ -83,7 +93,7 @@ serviceType: LoadBalancer
 # the credentials in a kubernetes secret and provide the secret name
 # here.  For more information, see
 # https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
-#imagePullSecrets: secretname
+#imagePullSecrets: dockerlogin
 
 # Target pods to nodes based on labels set on the nodes.  For more
 # information, see
@@ -111,6 +121,6 @@ distStorage:
     oauth2EndPoint: "Azure_OAuth2_Endpoint"
   azureStorage: # AzureStorage gen2v2
     accountName: "xxx"
-    accessKey: "Xxx"
+    accessKey: "xxx"
     filesystem: "xxx"
     path: "xxx"

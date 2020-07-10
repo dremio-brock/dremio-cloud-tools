@@ -1,8 +1,8 @@
 # The image used to build the Dremio cluster. It is recommended to update the
 # version tag to the version that you are using. This will ensure that all
 # the pods are using the same version of the software.
-image: jonnydixon/dremio-prometheus
-imageTag: 4.2.7
+image: jonnydixon/dremio-ee-prometheus
+imageTag: 4.5.0
 
 # Check out Dremio documentation for memory and cpu requirements for
 # the coordinators and the executors.
@@ -12,8 +12,8 @@ executor:
   engineName: reflections
   memory: 11264
   cpu: 3.5
-  minCount: 2
-  maxCount: 6
+  minCount: 1
+  maxCount: 4
   scaleUpTime: 10
   scaleDownTime: 600
   volumeSize: 100Gi
@@ -32,11 +32,16 @@ executor:
       # reservation.
       cache_pct: 100
 
+#imagePullSecrets: dockerlogin
+
+hive2: false
+hive3: true
+
 # information
 distStorage:
   # Valid values are local, aws, azure or azureStorage. aws and azure
   # choice requires additional configuration data.
-  type: "azureStorage"
+  type: "local"
   aws: # S3
     bucketName: "Your_AWS_bucket_name"
     path: "/"
